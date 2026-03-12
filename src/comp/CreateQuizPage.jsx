@@ -26,6 +26,7 @@ function emptyQuestion(type = "qcm") {
   };
 }
 
+
 function StepHeader({ step, current, label }) {
   const done   = current > step;
   const active = current === step;
