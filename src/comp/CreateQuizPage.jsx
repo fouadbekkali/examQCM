@@ -180,6 +180,8 @@ export default function CreateQuizPage() {
     const file = e.target.files[0];
     if (!file) return;
     setUploadError("");
+    // 🕸 HADD " new FileReader() " ASADI9I KANSTA3MLOHA BAX : 
+    //          -   
     const reader = new FileReader();
     reader.onload = (ev) => {
       try {
@@ -252,7 +254,7 @@ export default function CreateQuizPage() {
       </header>
 
       <div className="max-w-2xl mx-auto px-6 py-10">
-
+    {/* LES STEEPS KIMXIW BHAD LAMANIER IDA KAN KISAWI WA7D AFFICHIER FORMULE IDA KAN KISAWI 2 AFICHIER ...  */}
         {step === 1 && (
           <div className="space-y-6">
             <div>
