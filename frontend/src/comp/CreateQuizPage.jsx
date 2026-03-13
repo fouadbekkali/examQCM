@@ -12,6 +12,8 @@ const MODULES = [
   { id: 3, name: "Informatique" },
 ];
 
+
+// o
 function generateId() {
   return Date.now() + Math.random();
 }
