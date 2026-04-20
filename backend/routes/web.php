@@ -1,10 +1,11 @@
 <?php
-//test
 
-// routes/api.php — زيد هاد الroutes فالملف الموجود
 
 use App\Http\Controllers\QuizController;
 use Illuminate\Support\Facades\Route;
+
+
+use App\Http\Controllers\Api\AuthController;
 
 Route::middleware('auth:sanctum')->group(function () {
 
@@ -24,9 +25,12 @@ Route::middleware('auth:sanctum')->group(function () {
 
 });
 
+Route::post('/login', [AuthController::class, 'login']);
+Route::middleware('auth:sanctum')->get('/me', [AuthController::class, 'me']);
+
 /*
 ENDPOINTS:
-POST   /api/quiz                              → Créer quiz (Enseignant)
+POST   /api/quiz                              → Créer quiz (Enseignant) 
 GET    /api/quiz/{id}/results                 → Résultats quiz (Enseignant)
 GET    /api/quiz                              → Liste quiz disponibles (Etudiant)
 POST   /api/quiz/{id}/start                   → Démarrer quiz (Etudiant)

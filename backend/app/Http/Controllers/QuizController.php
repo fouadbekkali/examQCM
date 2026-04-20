@@ -24,6 +24,18 @@ class QuizController extends Controller {
     }
 
     // ─────────────────────────────────────────────────────
+    // ENSEIGNANT — Liste des quiz créés
+    // GET /api/teacher/quizzes
+    // ─────────────────────────────────────────────────────
+    public function teacherQuizzes() {
+        $quizzes = Quiz::where('enseignant_id', $this->enseignant()->id)
+            ->with(['module', 'classe'])
+            ->orderBy('created_at', 'desc')
+            ->get();
+        return response()->json($quizzes);
+    }
+
+    // ─────────────────────────────────────────────────────
     // ENSEIGNANT — Créer et publier un quiz
     // POST /api/quiz
     // ─────────────────────────────────────────────────────
@@ -279,5 +291,16 @@ class QuizController extends Controller {
             'total'   => $quiz->sessions->count(),
             'results' => $results,
         ]);
+    }
+
+    // ─────────────────────────────────────────────────────
+    // OBTENIR Classes et Modules 
+    // ─────────────────────────────────────────────────────
+    public function getClasses() {
+        return response()->json(\App\Models\Classe::all());
+    }
+
+    public function getModules() {
+        return response()->json(\App\Models\Module::all());
     }
 }

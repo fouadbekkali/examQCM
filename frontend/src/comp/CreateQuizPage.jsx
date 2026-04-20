@@ -1,16 +1,5 @@
-import { useState, useRef } from "react";
-
-const CLASSES = [
-  { id: 1, name: "2ème Année Informatique" },
-  { id: 2, name: "1ère Année Gestion" },
-  { id: 3, name: "3ème Année Marketing" },
-];
-
-const MODULES = [
-  { id: 1, name: "Français" },
-  { id: 2, name: "Mathématiques" },
-  { id: 3, name: "Informatique" },
-];
+import { useState, useEffect, useRef } from "react";
+import axios from "../axios";
 
 
 // ol
@@ -30,20 +19,18 @@ function emptyQuestion(type = "qcm") {
 
 
 function StepHeader({ step, current, label }) {
-  const done   = current > step;
+  const done = current > step;
   const active = current === step;
   return (
     <div className="flex items-center gap-3">
-      <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold border-2 transition-all ${
-        done   ? "bg-slate-800 border-slate-800 text-white" :
+      <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold border-2 transition-all ${done ? "bg-slate-800 border-slate-800 text-white" :
         active ? "bg-white border-slate-800 text-slate-800" :
-                 "bg-transparent border-slate-300 text-slate-400"
-      }`}>
+          "bg-transparent border-slate-300 text-slate-400"
+        }`}>
         {done ? "✓" : step}
       </div>
-      <span className={`text-sm font-medium ${
-        active ? "text-slate-800" : done ? "text-slate-500" : "text-slate-400"
-      }`}>{label}</span>
+      <span className={`text-sm font-medium ${active ? "text-slate-800" : done ? "text-slate-500" : "text-slate-400"
+        }`}>{label}</span>
     </div>
   );
 }
@@ -104,14 +91,12 @@ function QCMQuestionCard({ q, index, onChange, onDelete }) {
 
       <div className="space-y-2">
         {q.options.map((opt, i) => (
-          <div key={i} className={`flex items-center gap-3 px-4 py-3 rounded-lg border transition-all ${
-            q.correct === i ? "border-slate-800 bg-slate-50" : "border-slate-200 hover:border-slate-300"
-          }`}>
+          <div key={i} className={`flex items-center gap-3 px-4 py-3 rounded-lg border transition-all ${q.correct === i ? "border-slate-800 bg-slate-50" : "border-slate-200 hover:border-slate-300"
+            }`}>
             <button type="button"
               onClick={e => { e.preventDefault(); e.stopPropagation(); onChange({ ...q, correct: i }); }}
-              className={`w-5 h-5 rounded-full border-2 flex-shrink-0 flex items-center justify-center transition-all ${
-                q.correct === i ? "border-slate-800 bg-slate-800" : "border-slate-300 hover:border-slate-600"
-              }`}>
+              className={`w-5 h-5 rounded-full border-2 flex-shrink-0 flex items-center justify-center transition-all ${q.correct === i ? "border-slate-800 bg-slate-800" : "border-slate-300 hover:border-slate-600"
+                }`}>
               {q.correct === i && <div className="w-2 h-2 rounded-full bg-white" />}
             </button>
             <span className="text-xs font-bold text-slate-400 w-4">{String.fromCharCode(65 + i)}</span>
@@ -151,7 +136,7 @@ function TextQuestionCard({ q, index, onChange, onDelete }) {
   );
 }
 
-const inputCls  = "w-full bg-white border border-slate-200 rounded-lg px-4 py-3 text-slate-800 text-sm focus:outline-none focus:border-slate-800 transition-colors placeholder-slate-400";
+const inputCls = "w-full bg-white border border-slate-200 rounded-lg px-4 py-3 text-slate-800 text-sm focus:outline-none focus:border-slate-800 transition-colors placeholder-slate-400";
 const selectCls = "w-full bg-white border border-slate-200 rounded-lg px-4 py-3 text-slate-800 text-sm focus:outline-none focus:border-slate-800 transition-colors appearance-none cursor-pointer";
 
 function Field({ label, hint, children }) {
@@ -165,26 +150,34 @@ function Field({ label, hint, children }) {
     </div>
   );
 }
-
+// hna fin kaynaa lkhdmma :
+// ////////////////////////
 export default function CreateQuizPage() {
-  const [step, setStep]               = useState(1);
-  const [form, setForm]               = useState({ title:"", class_id:"", module_id:"", duration:30, max_tentatives:2, questions_count:10 });
-  const [questions, setQuestions]     = useState([]);
+  // step bach 
+  const [step, setStep] = useState(1);
+  // form dyaal 
+  const [form, setForm] = useState({ title: "", class_id: "", module_id: "", duration: 30, max_tentatives: 2, questions_count: 10 });
+  const [questions, setQuestions] = useState([]);
+  // gestion dyaal les errror 
   const [uploadError, setUploadError] = useState("");
-  const [published, setPublished]     = useState(false);
+  // publisiter dyaal 
+  const [published, setPublished] = useState(false);
+  // haddi bach 
   const fileRef = useRef();
-
-  const updateForm     = (k, v)    => setForm(p => ({ ...p, [k]: v }));
-  const addQuestion    = (type)    => setQuestions(p => [emptyQuestion(type), ...p]);
-  const updateQuestion = (id, d)   => setQuestions(p => p.map(q => q.id === id ? d : q));
-  const deleteQuestion = (id)      => setQuestions(p => p.filter(q => q.id !== id));
+  // classes bach 
+  const [classes, setClasses] = useState([]);
+  const [modules, setModules] = useState([]);
+  // haddi rir bach 
+  const updateForm = (k, v) => setForm(p => ({ ...p, [k]: v }));
+   
+  const addQuestion = (type) => setQuestions(p => [emptyQuestion(type), ...p]);
+  const updateQuestion = (id, d) => setQuestions(p => p.map(q => q.id === id ? d : q));
+  const deleteQuestion = (id) => setQuestions(p => p.filter(q => q.id !== id));
 
   const handleUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
     setUploadError("");
-    // 🕸 HADD " new FileReader() " ASADI9I KANSTA3MLOHA BAX : 
-    //          -   
     const reader = new FileReader();
     reader.onload = (ev) => {
       try {
@@ -195,8 +188,10 @@ export default function CreateQuizPage() {
           const lines = ev.target.result.trim().split("\n").slice(1);
           setQuestions(p => [...p, ...lines.map(line => {
             const [type, text, a, b, c, d, correct] = line.split(",");
-            return { id: generateId(), type: type?.trim()||"qcm", text: text?.trim()||"",
-              options: [a,b,c,d].map(o => o?.trim()||""), correct: parseInt(correct?.trim()||"0") };
+            return {
+              id: generateId(), type: type?.trim() || "qcm", text: text?.trim() || "",
+              options: [a, b, c, d].map(o => o?.trim() || ""), correct: parseInt(correct?.trim() || "0")
+            };
           })]);
         } else {
           setUploadError("Format non supporté. Utilisez JSON ou CSV.");
@@ -209,8 +204,42 @@ export default function CreateQuizPage() {
 
   const step1Valid = form.title.trim() && form.class_id && form.module_id && form.duration > 0;
   const step2Valid = questions.length > 0;
-  const publier    = () => { console.log("Publié:", { ...form, questions }); setPublished(true); };
-  const reset      = () => { setPublished(false); setStep(1); setForm({ title:"", class_id:"", module_id:"", duration:30, max_tentatives:2, questions_count:10 }); setQuestions([]); };
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [clsRes, modRes] = await Promise.all([
+          axios.get('/api/classes?_=' + Date.now()),
+          axios.get('/api/modules?_=' + Date.now())
+        ]);
+        setClasses(Array.isArray(clsRes.data) ? clsRes.data : []);
+        setModules(Array.isArray(modRes.data) ? modRes.data : []);
+      } catch (err) {
+        console.error("Erreur de chargement", err);
+        setUploadError("API Erreur: " + (err.response?.data?.message || err.message));
+      }
+    };
+    fetchData();
+  }, []);
+
+  const publier = async () => {
+    try {
+      await axios.post('/api/quiz', {
+        title: form.title,
+        class_id: form.class_id,
+        module_id: form.module_id,
+        duration_minutes: form.duration,
+        max_tentatives: form.max_tentatives,
+        questions_count: form.questions_count,
+        questions: questions
+      });
+      setPublished(true);
+    } catch (err) {
+      console.error(err);
+      setUploadError(err.response?.data?.message || "Erreur lors de la publication");
+    }
+  };
+  const reset = () => { setPublished(false); setStep(1); setForm({ title: "", class_id: "", module_id: "", duration: 30, max_tentatives: 2, questions_count: 10 }); setQuestions([]); };
 
   if (published) return (
     <div className="min-h-screen bg-slate-50 flex items-center justify-center">
@@ -221,10 +250,10 @@ export default function CreateQuizPage() {
         <h1 className="text-xl font-bold text-slate-800 mb-2">Quiz publié</h1>
         <p className="text-sm text-slate-500 mb-8">
           Notification envoyée à{" "}
-          <span className="font-semibold text-slate-700">{CLASSES.find(c => c.id == form.class_id)?.name}</span>
+          <span className="font-semibold text-slate-700">{classes.find(c => c.id == form.class_id)?.name}</span>
         </p>
         <div className="border border-slate-100 rounded-xl overflow-hidden mb-8">
-          {[["Titre", form.title], ["Durée", `${form.duration} min`], ["Questions/étudiant", `${form.questions_count} / ${questions.length}`]].map(([k,v]) => (
+          {[["Titre", form.title], ["Durée", `${form.duration} min`], ["Questions/étudiant", `${form.questions_count} / ${questions.length}`]].map(([k, v]) => (
             <div key={k} className="flex justify-between px-4 py-3 border-b border-slate-100 last:border-0">
               <span className="text-xs text-slate-500">{k}</span>
               <span className="text-xs font-semibold text-slate-800">{v}</span>
@@ -257,13 +286,19 @@ export default function CreateQuizPage() {
       </header>
 
       <div className="max-w-2xl mx-auto px-6 py-10">
-    {/* LES STEEPS KIMXIW BHAD LAMANIER IDA KAN KISAWI WA7D AFFICHIER FORMULE IDA KAN KISAWI 2 AFICHIER ...  */}
+        {/* LES STEEPS KIMXIW BHAD LAMANIER IDA KAN KISAWI WA7D AFFICHIER FORMULE IDA KAN KISAWI 2 AFICHIER ...  */}
         {step === 1 && (
           <div className="space-y-6">
             <div>
               <h2 className="text-xl font-bold text-slate-800">Paramètres du quiz</h2>
               <p className="text-sm text-slate-500 mt-1">Définissez les informations générales de l'évaluation</p>
             </div>
+
+            {uploadError && (
+              <div className="border border-red-200 bg-red-50 rounded-lg px-4 py-3 text-sm text-red-600 mb-2 font-medium">
+                {uploadError}
+              </div>
+            )}
 
             <div className="bg-white border border-slate-200 rounded-xl p-6 space-y-5 shadow-sm">
               <Field label="Intitulé">
@@ -274,28 +309,28 @@ export default function CreateQuizPage() {
                 <Field label="Classe">
                   <select value={form.class_id} onChange={e => updateForm("class_id", e.target.value)} className={selectCls}>
                     <option value="">Sélectionner...</option>
-                    {CLASSES.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                    {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                   </select>
                 </Field>
                 <Field label="Module">
                   <select value={form.module_id} onChange={e => updateForm("module_id", e.target.value)} className={selectCls}>
                     <option value="">Sélectionner...</option>
-                    {MODULES.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
+                    {modules.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
                   </select>
                 </Field>
               </div>
               <div className="grid grid-cols-3 gap-4">
                 <Field label="Durée" hint="minutes">
                   <input type="number" min={1} max={300} value={form.duration}
-                    onChange={e => updateForm("duration", parseInt(e.target.value)||1)} className={inputCls} />
+                    onChange={e => updateForm("duration", parseInt(e.target.value) || 1)} className={inputCls} />
                 </Field>
                 <Field label="Tentatives" hint="max">
                   <input type="number" min={1} max={10} value={form.max_tentatives}
-                    onChange={e => updateForm("max_tentatives", parseInt(e.target.value)||1)} className={inputCls} />
+                    onChange={e => updateForm("max_tentatives", parseInt(e.target.value) || 1)} className={inputCls} />
                 </Field>
                 <Field label="Questions" hint="par étudiant">
                   <input type="number" min={1} value={form.questions_count}
-                    onChange={e => updateForm("questions_count", parseInt(e.target.value)||1)} className={inputCls} />
+                    onChange={e => updateForm("questions_count", parseInt(e.target.value) || 1)} className={inputCls} />
                 </Field>
               </div>
             </div>
@@ -382,8 +417,8 @@ export default function CreateQuizPage() {
               </div>
               {[
                 ["Intitulé", form.title],
-                ["Classe", CLASSES.find(c => c.id == form.class_id)?.name],
-                ["Module", MODULES.find(m => m.id == form.module_id)?.name],
+                ["Classe", classes.find(c => c.id == form.class_id)?.name],
+                ["Module", modules.find(m => m.id == form.module_id)?.name],
                 ["Durée", `${form.duration} minutes`],
                 ["Tentatives max", form.max_tentatives],
                 ["Questions / étudiant", `${form.questions_count} sur ${questions.length}`],
@@ -404,7 +439,7 @@ export default function CreateQuizPage() {
               <div className="max-h-52 overflow-y-auto divide-y divide-slate-100">
                 {questions.map((q, i) => (
                   <div key={q.id} className="flex items-center gap-4 px-6 py-3">
-                    <span className="text-xs text-slate-400 w-5 flex-shrink-0 font-medium">{i+1}</span>
+                    <span className="text-xs text-slate-400 w-5 flex-shrink-0 font-medium">{i + 1}</span>
                     <span className="text-xs px-2 py-0.5 bg-slate-100 text-slate-500 rounded font-medium flex-shrink-0">
                       {q.type === "qcm" ? "QCM" : "Libre"}
                     </span>
