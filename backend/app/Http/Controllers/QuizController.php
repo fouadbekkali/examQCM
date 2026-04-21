@@ -269,12 +269,32 @@ class QuizController extends Controller {
     // GET /api/quiz/{id}/results
     // ─────────────────────────────────────────────────────
     public function results($id) {
-        $quiz     = Quiz::with(['sessions.etudiant.user'])->findOrFail($id);
+        $quiz = Quiz::with([
+            'sessions.etudiant.user',
+            'sessions.answers.question',
+            'sessions.answers.option',
+            'questions.options',
+            'module',
+            'classe'
+        ])->findOrFail($id);
+
         $qcmTotal = $quiz->questions()->where('type', 'qcm')->count();
+
+        // Safely extract class properties or defaults
+        $classeLevel = $quiz->classe?->level ?? 'Non assigné';
+        $currentMonth = (int)date('m');
+        $currentYear = (int)date('Y');
+        $fallbackYear = $currentMonth >= 9 ? $currentYear . '/' . ($currentYear + 1) : ($currentYear - 1) . '/' . $currentYear;
+        $classeYear = $quiz->classe?->academic_year ?? $fallbackYear;
+        
+        // Infer filiere based on class name or default
+        $className = $quiz->classe?->name ?? '';
+        $filiere = str_contains(strtoupper($className), 'DEV') ? 'Développement Informatique' : 'Non assignée';
 
         $results = $quiz->sessions->map(function ($session) use ($qcmTotal) {
             $user = $session->etudiant->user;
             return [
+                'session_id' => $session->id,
                 'etudiant'   => $user->prenom . ' ' . $user->nom,
                 'score'      => $session->score ?? 0,
                 'qcm_total'  => $qcmTotal,
@@ -283,14 +303,58 @@ class QuizController extends Controller {
                 'duree'      => $session->submitted_at
                     ? $session->started_at->diffInMinutes($session->submitted_at) . ' min'
                     : 'En cours',
+                'answers'    => $session->answers,
             ];
         });
 
         return response()->json([
-            'quiz'    => $quiz->only(['id', 'title', 'duration_minutes', 'questions_count']),
-            'total'   => $quiz->sessions->count(),
-            'results' => $results,
+            'quiz'    => [
+                'id' => $quiz->id,
+                'title' => $quiz->title,
+                'duration_minutes' => $quiz->duration_minutes,
+                'questions_count' => $quiz->questions_count,
+                'module' => $quiz->module?->name,
+                'classe' => $quiz->classe?->name,
+                'questions' => $quiz->questions,
+            ],
+            'filiere'       => $filiere,
+            'niveau'        => $classeLevel,
+            'annee'         => $classeYear,
+            'bareme'        => $qcmTotal, 
+            'total'         => $quiz->sessions->count(),
+            'results'       => $results,
         ]);
+    }
+
+    // ─────────────────────────────────────────────────────
+    // ENSEIGNANT — Supprimer un quiz
+    // DELETE /api/quiz/{id}
+    // ─────────────────────────────────────────────────────
+    public function destroy($id) {
+        $quiz = Quiz::findOrFail($id);
+        
+        // Ensure the logged-in teacher owns the quiz
+        if ($quiz->enseignant_id !== $this->enseignant()->id) {
+            return response()->json(['message' => 'Non autorisé'], 403);
+        }
+
+        DB::beginTransaction();
+        try {
+            // Because of cascading deletes or relations, deleting the quiz might need manual cleaning,
+            // but standard Laravel setup usually deletes via foreign keys if migrations are cascaded.
+            // If not, we'll explicitly delete related data to be safe:
+            QuizQuestion::where('quiz_id', $quiz->id)->delete();
+            // QuizSession will cascade or can be explicitly deleted:
+            QuizSession::where('quiz_id', $quiz->id)->delete();
+
+            $quiz->delete();
+            DB::commit();
+
+            return response()->json(['message' => 'Quiz supprimé avec succès']);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => 'Erreur lors de la suppression', 'error' => $e->getMessage()], 500);
+        }
     }
 
     // ─────────────────────────────────────────────────────

@@ -24,6 +24,18 @@ export default function TeacherDashboard() {
         fetchQuizzes();
     }, []);
 
+    const handleDeleteQuiz = async (id) => {
+        if (!window.confirm("Êtes-vous sûr de vouloir supprimer ce quiz ? Cette action est irréversible.")) return;
+        
+        try {
+            await axios.delete(`/api/quiz/${id}`);
+            setQuizzes(quizzes.filter(q => q.id !== id));
+        } catch (error) {
+            console.error('Erreur lors de la suppression', error);
+            alert("Erreur lors de la suppression du quiz.");
+        }
+    };
+
     const handleLogout = async () => {
         await logout();
         navigate('/login');
@@ -74,9 +86,19 @@ export default function TeacherDashboard() {
                                         <span>{quiz.duration_minutes} min</span>
                                     </div>
                                 </div>
-                                <div className="mt-6 pt-4 border-t border-slate-100">
-                                    <button className="w-full text-center text-sm font-medium text-slate-700 hover:text-slate-900">
+                                <div className="mt-6 pt-4 border-t border-slate-100 flex gap-2">
+                                    <button 
+                                        onClick={() => navigate(`/teacher/quiz/${quiz.id}/results`)}
+                                        className="flex-1 text-center py-1.5 bg-blue-50 text-blue-700 rounded text-sm font-medium hover:bg-blue-100 transition"
+                                    >
                                         Voir les résultats
+                                    </button>
+                                    <button 
+                                        onClick={() => handleDeleteQuiz(quiz.id)}
+                                        className="text-center px-4 py-1.5 bg-red-50 text-red-600 rounded text-sm font-medium hover:bg-red-100 transition"
+                                        title="Supprimer ce quiz"
+                                    >
+                                        Supprimer
                                     </button>
                                 </div>
                             </div>

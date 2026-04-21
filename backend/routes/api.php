@@ -21,6 +21,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/teacher/quizzes',   [QuizController::class, 'teacherQuizzes']);
         Route::post('/quiz',             [QuizController::class, 'store']);
         Route::get('/quiz/{id}/results', [QuizController::class, 'results']);
+        Route::delete('/quiz/{id}',      [QuizController::class, 'destroy']);
     });
 
     // ── Etudiant ───────────────────────────────────────────
