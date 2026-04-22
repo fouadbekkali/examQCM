@@ -16,6 +16,14 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/classes', [QuizController::class, 'getClasses']);
     Route::get('/modules', [QuizController::class, 'getModules']);
 
+    // ── Administrateur ─────────────────────────────────────
+    Route::middleware('role:Administrateur')->group(function () {
+        Route::get('/admin/users',       [\App\Http\Controllers\AdminController::class, 'index']);
+        Route::post('/admin/users',      [\App\Http\Controllers\AdminController::class, 'store']);
+        Route::put('/admin/users/{id}',  [\App\Http\Controllers\AdminController::class, 'update']);
+        Route::delete('/admin/users/{id}',[\App\Http\Controllers\AdminController::class, 'destroy']);
+    });
+
     // ── Enseignant ─────────────────────────────────────────
     Route::middleware('role:Enseignant')->group(function () {
         Route::get('/teacher/quizzes',   [QuizController::class, 'teacherQuizzes']);

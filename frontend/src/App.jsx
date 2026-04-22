@@ -6,12 +6,20 @@ import StudentDashboard from './comp/StudentDashboard';
 import TakeQuizPage from './comp/TakeQuizPage';
 import ProtectedRoute from './comp/ProtectedRoute';
 import QuizResultsPage from './comp/QuizResultsPage';
+import AdminDashboard from './comp/AdminDashboard';
 import './App.css';
 
 function App() {
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
+
+      {/* Routes Administrateur */}
+      <Route path="/admin" element={
+        <ProtectedRoute role="Administrateur">
+          <AdminDashboard />
+        </ProtectedRoute>
+      } />
 
       {/* Routes Enseignant */}
       <Route path="/teacher" element={
